@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Game of Life: Financial Edition</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Fraunces:ital,wght@0,400;0,600;0,800;1,500&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<!-- SPLASH -->
+<div id="splash-screen" class="splash-screen">
+  <div class="floating-symbols" id="floating-symbols"></div>
+  <div class="splash-content">
+    <h1 class="splash-title">
+      <span class="splash-title-1">The Game</span>
+      <span class="splash-title-2">of Life:</span>
+      <span class="splash-title-3">Financial Edition</span>
+    </h1>
+    <p class="splash-subtitle">A financial literacy prototype</p>
+    <button class="btn-play" onclick="startGame()">▶ Play</button>
+    <p class="splash-credit">A university research project</p>
+  </div>
+</div>
+
+
+<!-- STARTING MODAL -->
+<div id="starting-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 class="modal-title">Meet Yourself</h2>
+    <p class="modal-intro">
+      Life doesn't start fair. Here's the hand you've been dealt — just like in the real world, you didn't choose any of it.
+    </p>
+    <div id="starting-cards" class="starting-cards"></div>
+    <button class="btn-start" onclick="beginGame()">Begin at age 18 →</button>
+  </div>
+</div>
+
+
+<!-- MAIN GAME -->
+<div id="game-ui" class="app hidden">
+  <div class="header">
+    <h1 class="game-title">
+      <span>Game of Life:</span>
+      <span class="finance">Financial Edition</span>
+    </h1>
+    <div class="seed-badge" tabindex="0">
+      <span class="seed-q">?</span>
+      <div class="seed-tooltip">
+        <div class="seed-label">Run Seed</div>
+        <div class="seed-value" id="seed-display">—</div>
+        <div class="seed-note">
+          A unique 5-character ID for this playthrough. Every run randomises
+          your starting conditions (parents, education, COL, health, personality)
+          and which events fire, so no two lives are the same.
+          <br><br>
+          Use this code when reporting issues or comparing runs with friends —
+          e.g. "I got <strong>Q4F2A</strong> and ended up bankrupt by 30."
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-grid">
+
+    <!-- LEFT: Stats -->
+    <div class="card card-pink stats-panel">
+      <div class="age-display">
+        <div class="age-num" id="age-display">18</div>
+        <div class="age-label" id="age-season">Spring, Year 1</div>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Cash</span>
+        <span class="stat-value" id="stat-cash">£0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Investments</span>
+        <span class="stat-value positive" id="stat-investments">£0</span>
+      </div>
+      <div class="stat-row stat-row-debt" tabindex="0">
+        <span class="stat-label">Debt</span>
+        <span class="stat-value negative" id="stat-debt">£0</span>
+        <div class="debt-tooltip" id="debt-breakdown"></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Net Worth</span>
+        <span class="stat-value" id="stat-networth">£0</span>
+      </div>
+
+      <div class="stat-row">
+        <span class="stat-label">Happiness</span>
+        <div class="bar-container">
+          <div class="bar-fill happiness" id="bar-happiness"></div>
+          <div class="bar-value" id="val-happiness">70</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Health</span>
+        <div class="bar-container">
+          <div class="bar-fill health" id="bar-health"></div>
+          <div class="bar-value" id="val-health">90</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Relationships</span>
+        <div class="bar-container">
+          <div class="bar-fill relationships" id="bar-relationships"></div>
+          <div class="bar-value" id="val-relationships">60</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Knowledge</span>
+        <div class="bar-container">
+          <div class="bar-fill knowledge" id="bar-knowledge"></div>
+          <div class="bar-value" id="val-knowledge">10</div>
+        </div>
+      </div>
+
+      <!-- INCOME / COST CHIPS with detail panel below -->
+      <div class="flow-chips">
+        <div class="flow-chip flow-income" tabindex="0">
+          <div class="flow-chip-head">
+            <span class="flow-icon">📈</span>
+            <span class="flow-label">Income</span>
+          </div>
+          <div class="flow-value" id="chip-income-value">£0</div>
+          <div class="flow-hover" id="income-breakdown"></div>
+        </div>
+        <div class="flow-chip flow-cost" tabindex="0">
+          <div class="flow-chip-head">
+            <span class="flow-icon">📉</span>
+            <span class="flow-label">Costs</span>
+          </div>
+          <div class="flow-value" id="chip-cost-value">£0</div>
+          <div class="flow-hover" id="cost-breakdown"></div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="action-buttons">
+        <button class="btn-invest" id="btn-invest" onclick="openInvestmentModal()">
+          💼 Invest
+        </button>
+        <button class="btn-paydown" onclick="openDebtPaydownModal()">
+          💸 Pay Debt
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Chart + unified content slot -->
+    <div class="right-column">
+      <div class="card card-green chart-card">
+        <h3>Your Journey Over Time</h3>
+        <div class="chart-container">
+          <canvas id="lifeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Single content slot: holds event OR (advance button + log) -->
+      <div id="event-slot" class="content-slot"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- DEBT PAYDOWN MODAL -->
+<div id="debt-modal" class="inv-modal-overlay hidden">
+  <div class="inv-modal" style="max-width: 560px;">
+    <div class="inv-modal-header">
+      <div class="inv-modal-title">
+        <span class="inv-modal-icon">💸</span>
+        <span>Pay Down Debt</span>
+      </div>
+      <div class="inv-cash-pill">
+        <span class="inv-cash-label">Cash available</span>
+        <span class="inv-cash-amount" id="debt-cash-display">£0</span>
+      </div>
+      <button class="inv-modal-close" onclick="closeDebtPaydownModal()">✕</button>
+    </div>
+    <div class="inv-content">
+      <p class="debt-modal-intro">
+        Paying down high-interest debt is a guaranteed return. £100 paid against your 19% credit card saves £19/year, every year.
+      </p>
+      <div id="debt-paydown-list"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- INVESTMENT MODAL -->
+<div id="investment-modal" class="inv-modal-overlay hidden">
+  <div class="inv-modal">
+    <div class="inv-modal-header">
+      <div class="inv-modal-title">
+        <span class="inv-modal-icon">💼</span>
+        <span>Investments</span>
+      </div>
+      <div class="inv-cash-pill">
+        <span class="inv-cash-label">Cash available</span>
+        <span class="inv-cash-amount" id="inv-cash-display">£0</span>
+      </div>
+      <button class="inv-modal-close" onclick="closeInvestmentModal()">✕</button>
+    </div>
+    <div class="inv-tabs" id="inv-tabs"></div>
+    <div class="inv-content" id="inv-content"></div>
+  </div>
+</div>
+
+
+<!-- END SCREEN -->
+<div id="end-screen" class="app hidden">
+  <div class="end-wrap">
+    <div class="end-header card card-yellow">
+      <h2 class="end-title">Life Summary</h2>
+      <div class="end-hero-row">
+        <div class="end-hero-block">
+          <div class="end-hero-label">Final Net Worth</div>
+          <div class="end-hero-value" id="end-net-worth">£0</div>
+        </div>
+        <div class="end-hero-divider"></div>
+        <div class="end-hero-block">
+          <div class="end-hero-label">Life Score</div>
+          <div class="end-hero-value" id="end-score-num">0</div>
+        </div>
+      </div>
+      <p id="end-commentary" class="end-commentary"></p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="end-tabs">
+      <button class="end-tab active" data-tab="overview" onclick="switchEndTab('overview')">Overview</button>
+      <button class="end-tab" data-tab="investments" onclick="switchEndTab('investments')">Investment Performance</button>
+      <button class="end-tab" data-tab="concepts" onclick="switchEndTab('concepts')">Concepts Learned</button>
+    </div>
+
+    <!-- Tab content -->
+    <div class="end-tab-content active" id="end-tab-overview">
+      <div class="end-chart-card card card-green">
+        <h3>Your Wealth Compounded Over Time</h3>
+        <p class="end-chart-sub">Net worth, broken down by source — see where compound growth actually comes from.</p>
+        <div class="end-chart-container">
+          <canvas id="endChart"></canvas>
+        </div>
+      </div>
+
+      <div class="end-stats-card card card-blue">
+        <h3>Interesting Stats</h3>
+        <div class="end-stats-grid" id="end-stats-grid"></div>
+      </div>
+    </div>
+
+    <div class="end-tab-content" id="end-tab-investments">
+      <div class="card card-green" style="padding: 22px 26px;">
+        <h3 style="font-family: 'Caveat'; font-size: 1.6rem; transform: rotate(-0.5deg); display: inline-block; margin-bottom: 4px;">Investment Performance</h3>
+        <p class="end-chart-sub">How each asset class performed across your lifetime — return vs. volatility.</p>
+        <div class="end-perf-table" id="end-perf-table"></div>
+      </div>
+
+      <div class="card card-yellow" style="padding: 22px 26px;">
+        <h3 style="font-family: 'Caveat'; font-size: 1.4rem; transform: rotate(-0.5deg); display: inline-block; margin-bottom: 6px;">Risk vs Return</h3>
+        <p class="end-chart-sub">Each dot is one asset class. Higher and to the left = better risk-adjusted returns.</p>
+        <div class="end-chart-container" style="height: 280px;">
+          <canvas id="endRiskChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="end-tab-content" id="end-tab-concepts">
+      <div class="card card-yellow" style="padding: 22px 26px;">
+        <h3 style="font-family: 'Caveat'; font-size: 1.6rem; transform: rotate(-0.5deg); display: inline-block; margin-bottom: 4px;">Concepts You Learned</h3>
+        <p class="end-chart-sub">Each event teaches one financial concept. Here's what your run covered.</p>
+        <div class="end-concepts-list" id="end-concepts-list"></div>
+      </div>
+    </div>
+
+    <div class="end-actions card card-pink">
+      <button class="btn-export" onclick="exportResults()">📥 Download My Results</button>
+      <p class="end-note">Email this file to the researcher to participate in the study.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- Scripts -->
+<script src="events.js"></script>
+<script src="startingConditions.js"></script>
+<script src="investments.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>
